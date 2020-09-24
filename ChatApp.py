@@ -1,4 +1,7 @@
 from tkinter import *
+import socket
+import threading
+import sys
 
 
 class ChatApplication():
@@ -12,9 +15,39 @@ class ChatApplication():
         self.send_button_foreground_color = 'black'
     
 
+    def get_user_name(self):
+        self.user_name = input("Enter User name : ")
+
+    
+    def connect_to_server(self):
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self.s.connect(("0.0.0.0", 8000))
+        except:
+            print("Server Not found!")
+            sys.exit()
+    
+
+    def contact_server(self):
+        self.s.send(str.encode(self.user_name))
+        welcome_msg = self.s.recv(2048).decode()
+        if "ERROR" in welcome_msg:
+            print(welcome_msg)
+            sys.exit()
+        self.is_connected = True
+
+        
+    
+    def recieve_message_from_server(self):
+        while self.is_connected:
+            message = self.s.recv(2048).decode()
+            self.chatbox.insert(END, str(message))
+
+
+
     def send_messages_to_server(self):
         message = self.messagebox.get()
-        self.chatbox.insert(END, str('ME : ' + message))
+        self.s.send(str.encode(message))
         self.messagebox.delete(0, END)
 
 
@@ -36,12 +69,16 @@ class ChatApplication():
                                          command = self.send_messages_to_server)
         self.send_button.grid(row = 1, column = 2)
 
-        print('Before mainloop')
+        listen_for_messages_thread = threading.Thread(target = self.recieve_message_from_server)
+        listen_for_messages_thread.start()
+
         self.root.mainloop()
-        print('After mainloop')
     
 
 
 if __name__ == "__main__":
     chat_app = ChatApplication()
+    chat_app.get_user_name()
+    chat_app.connect_to_server()
+    chat_app.contact_server()
     chat_app.chat_screen()
