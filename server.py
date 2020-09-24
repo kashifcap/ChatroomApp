@@ -27,7 +27,7 @@ class ServerForChatroom:
                     try:
                         user[1].send(str.encode(msg))
                     except:
-                        self.users.remove(user)
+                        continue
 
     
     def connection(self):

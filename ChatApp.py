@@ -6,7 +6,7 @@ import sys
 
 class ChatApplication():
     def __init__(self):
-        self.chatroom_size = '800x600+250+100'
+        self.chatroom_size = '750x450+250+100'
         self.chatroom_title = 'Chatroom'
         self.backgroungcolor = 'pink'
         self.chatbox_size = (90, 25)
@@ -30,9 +30,9 @@ class ChatApplication():
 
     def contact_server(self):
         self.s.send(str.encode(self.user_name))
-        welcome_msg = self.s.recv(2048).decode()
-        if "ERROR" in welcome_msg:
-            print(welcome_msg)
+        self.welcome_msg = self.s.recv(2048).decode()
+        if "ERROR" in self.welcome_msg:
+            print(self.welcome_msg)
             sys.exit()
         self.is_connected = True
 
@@ -41,6 +41,8 @@ class ChatApplication():
     def recieve_message_from_server(self):
         while self.is_connected:
             message = self.s.recv(2048).decode()
+            if self.user_name in message.split(':')[0]:
+                message = "Me :" + message.split(':')[1]        
             self.chatbox.insert(END, str(message))
 
 
@@ -68,6 +70,8 @@ class ChatApplication():
                                          fg = self.send_button_foreground_color,
                                          command = self.send_messages_to_server)
         self.send_button.grid(row = 1, column = 2)
+
+        self.chatbox.insert(END, str(self.welcome_msg))
 
         listen_for_messages_thread = threading.Thread(target = self.recieve_message_from_server)
         listen_for_messages_thread.start()
