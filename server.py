@@ -16,20 +16,22 @@ class ServerForChatroom:
         while is_connected:
             if len(self.users) > 0:
                 try:
-                    msg = client_data[1].recv(self.msg_size)
+                    msg = client_data[1].recv(self.msg_size).decode()
                 except:
                     is_connected = False
                     self.users.remove(client_data)
                 
+                msg = f"{client_data[0]} : {msg}"
+
                 for user in self.users:
                     try:
-                        user[1].send(msg)
+                        user[1].send(str.encode(msg))
                     except:
                         self.users.remove(user)
 
     
     def connection(self):
-        self.s.bind(self.connection_addr[0], self.connection_addr[1])
+        self.s.bind((self.connection_addr[0], self.connection_addr[1]))
         self.s.listen(5)
         print("Listening to connections....")
         while self.connection_status:
@@ -49,7 +51,7 @@ class ServerForChatroom:
 
             self.users.append((new_user, conn))
 
-            new_user_thread = threading.Thread(target = self.listen_for_messages, args=((new_user, conn)))
+            new_user_thread = threading.Thread(target = self.listen_for_messages, args=((new_user, conn), ))
             new_user_thread.start()
 
             print(f"Connection established with {new_user} at {addr}")
